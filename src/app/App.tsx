@@ -682,7 +682,7 @@ function ContactSection() {
           <div className="pt-8 border-t border-[#1a2a1a] space-y-4 font-mono text-[12px]">
             {[
               { Icon: Mail, k: "MAIL", v: "tauqeer@blackbox.sec", href: "mailto:tauqeer@blackbox.sec" },
-              { Icon: Github, k: "GIT ", v: "github.com/m-tauqeer", href: "https://github.com/m-tauqeer" },
+              { Icon: Github, k: "GIT ", v: "github.com/tauqeer018", href: "https://github.com/tauqeer018" },
               { Icon: Linkedin, k: "LINK", v: "linkedin.com/in/mtauqeer", href: "https://linkedin.com/in/mtauqeer" },
               { Icon: Bug, k: "PGP ", v: "0x9F4A · 2C71 · BD03", href: "#" },
             ].map(({ Icon, k, v, href }) => (
