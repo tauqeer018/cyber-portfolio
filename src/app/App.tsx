@@ -26,6 +26,8 @@ import {
   DecryptedText,
   SplitText,
 } from "./components/cyber-bits";
+import { createContext, useContext } from 'react';
+import { supabase } from '../lib/supabase';
 import { SettingsProvider, useSettings } from "./components/settings-context";
 import {
   ReticleCursor,
@@ -48,7 +50,10 @@ import {
   HorizontalProjects,
 } from "./components/storytelling";
 
-const PROJECTS = [
+const DataContext = createContext<any>(null);
+export const useData = () => useContext(DataContext);
+
+const DEFAULT_PROJECTS = [
   {
     id: "01",
     name: "Network Sniffer Tool",
@@ -153,7 +158,7 @@ const PROJECTS = [
   },
 ];
 
-const SKILLS = [
+const DEFAULT_SKILLS = [
   {
     title: "Infiltration",
     sub: "Red Teaming",
@@ -282,6 +287,8 @@ function HeroPortrait() {
 
 function HeroSection() {
   const { lowStim } = useSettings();
+  const { profile } = useData();
+  const name = profile?.name || "Muhammad Tauqeer.";
   return (
     <section id="hero" className="relative min-h-screen px-16 pt-40 pb-24 overflow-hidden">
       {!lowStim && (
@@ -313,7 +320,7 @@ function HeroSection() {
               className="block text-white/80 overflow-hidden"
             />
             <span className="block text-[#00FF66] mt-2 font-mono">
-              <DecryptedText text="Muhammad Tauqeer." delay={700} duration={1400} />
+              <DecryptedText text={name} delay={700} duration={1400} />
             </span>
           </h1>
 
@@ -392,7 +399,7 @@ function HeroSection() {
   );
 }
 
-function ProjectCard({ p, idx }: { p: (typeof PROJECTS)[number]; idx: number }) {
+function ProjectCard({ p, idx }: { p: any; idx: number }) {
   const Icon = p.icon;
   const [open, setOpen] = useState(false);
   return (
@@ -492,15 +499,29 @@ function ProjectCard({ p, idx }: { p: (typeof PROJECTS)[number]; idx: number }) 
 }
 
 function ProjectsSection() {
-  const hProjects = PROJECTS.map((p) => ({
-    id: p.id,
-    name: p.name,
-    role: p.role,
-    stack: p.stack,
-    blurb: p.blurb,
-    snippet: p.dossier.snippet,
-    sample: p.dossier.sample,
-  }));
+  const { projects } = useData();
+  const hProjects = projects.map((p: any, i: number) => {
+    if (p.metrics) {
+      return {
+        id: p.id,
+        name: p.name,
+        role: p.role,
+        stack: p.stack,
+        blurb: p.blurb,
+        snippet: p.dossier.snippet,
+        sample: p.dossier.sample,
+      };
+    }
+    return {
+      id: String(i + 1).padStart(2, '0'),
+      name: p.title,
+      role: p.type,
+      stack: (p.tech || []).join(' · '),
+      blurb: p.description,
+      snippet: p.dossier?.[0] || "// no code snippet provided",
+      sample: p.dossier || []
+    };
+  });
 
   return (
     <section id="projects" className="relative">
@@ -510,6 +531,8 @@ function ProjectsSection() {
 }
 
 function AboutSection() {
+  const { profile } = useData();
+  const name = profile?.name || "Muhammad Tauqeer.";
   return (
     <section id="about" className="relative">
       <StickyChapter num="02" title="Operator Dossier." caption="background check" />
@@ -517,7 +540,7 @@ function AboutSection() {
         <div className="col-span-6 space-y-8">
           <SectionLabel code="// 02">whoami</SectionLabel>
           <h2 className="font-[Inter] text-[48px] font-semibold tracking-tight text-white leading-[0.95]">
-            <ShinyText>Muhammad Tauqeer.</ShinyText>
+            <ShinyText>{name}</ShinyText>
           </h2>
           <ScrollWords
             text="I am an offensive security specialist and low-level engineer. I specialize in red-teaming, deep network analysis, and building custom tooling to map and infiltrate hardened environments."
@@ -563,6 +586,17 @@ function AboutSection() {
 }
 
 function SkillsSection() {
+  const { skills } = useData();
+  const mappedSkills = skills.map((s: any) => {
+    if (s.sub) return s;
+    return {
+      title: s.category,
+      sub: "Specialized Skill",
+      icon: Code2,
+      items: (s.items || []).map((it: any) => ({ name: it.name, lvl: it.level || it.lvl || 0 }))
+    };
+  });
+  
   const containerVariants = {
     hidden: {},
     show: { transition: { staggerChildren: 0.15 } },
@@ -613,7 +647,7 @@ function SkillsSection() {
           viewport={{ once: true, amount: 0.2 }}
           className="grid grid-cols-3 gap-6"
         >
-          {SKILLS.map((s) => {
+          {mappedSkills.map((s: any, idx: number) => {
             const Icon = s.icon;
             return (
               <motion.div
@@ -623,7 +657,7 @@ function SkillsSection() {
                 className="relative rounded-2xl border border-[#1a2a1a] bg-[#0A0F0A] p-8 group hover:border-[#00FF66]/40 transition-colors"
               >
                 <div className="absolute top-0 right-0 font-mono text-[10px] tracking-[0.25em] uppercase text-[#224422] p-4">
-                  v.{(SKILLS.indexOf(s) + 1).toString().padStart(2, "0")}
+                  v.{(idx + 1).toString().padStart(2, "0")}
                 </div>
                 <div className="w-12 h-12 rounded-lg bg-[#00FF66]/10 border border-[#224422] flex items-center justify-center mb-8">
                   <Icon className="w-5 h-5 text-[#00FF66]" />
@@ -664,6 +698,8 @@ function SkillsSection() {
 
 function ContactSection() {
   const [mode, setMode] = useState<"form" | "cli">("cli");
+  const { profile } = useData();
+  const email = profile?.email || "tauqeer@blackbox.sec";
   return (
     <section id="contact" className="relative">
       <StickyChapter num="04" title="Open a channel." caption="handshake awaiting" />
@@ -681,7 +717,7 @@ function ContactSection() {
 
           <div className="pt-8 border-t border-[#1a2a1a] space-y-4 font-mono text-[12px]">
             {[
-              { Icon: Mail, k: "MAIL", v: "tauqeer@blackbox.sec", href: "mailto:tauqeer@blackbox.sec" },
+              { Icon: Mail, k: "MAIL", v: email, href: `mailto:${email}` },
               { Icon: Github, k: "GIT ", v: "github.com/tauqeer018", href: "https://github.com/tauqeer018" },
               { Icon: Linkedin, k: "LINK", v: "linkedin.com/in/mtauqeer", href: "https://linkedin.com/in/mtauqeer" },
               { Icon: Bug, k: "PGP ", v: "0x9F4A · 2C71 · BD03", href: "#" },
@@ -848,10 +884,45 @@ function Shell() {
   );
 }
 
+function DataProvider({ children }: { children: React.ReactNode }) {
+  const [data, setData] = useState({ projects: DEFAULT_PROJECTS, skills: DEFAULT_SKILLS, profile: null });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      const [projRes, skillRes, profRes] = await Promise.all([
+        supabase.from('projects').select('*').order('created_at', { ascending: true }),
+        supabase.from('skills').select('*').order('created_at', { ascending: true }),
+        supabase.from('profile').select('*').limit(1).single(),
+      ]);
+      
+      setData({
+        projects: projRes.data?.length ? projRes.data : DEFAULT_PROJECTS,
+        skills: skillRes.data?.length ? skillRes.data : DEFAULT_SKILLS,
+        profile: profRes.data || null,
+      });
+      setLoading(false);
+    }
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="bg-black min-h-screen flex items-center justify-center font-mono text-[12px] tracking-widest uppercase text-[#00FF66]">
+        Establishing Secure Link...
+      </div>
+    );
+  }
+
+  return <DataContext.Provider value={data}>{children}</DataContext.Provider>;
+}
+
 export default function App() {
   return (
     <SettingsProvider>
-      <Shell />
+      <DataProvider>
+        <Shell />
+      </DataProvider>
     </SettingsProvider>
   );
 }
