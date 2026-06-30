@@ -146,7 +146,6 @@ export function TerminalCLI() {
               }
             }}
             className="flex-1 bg-transparent outline-none border-none font-mono text-[12.5px] text-white caret-[#00FF66]"
-            autoFocus
             spellCheck={false}
           />
           <motion.span
